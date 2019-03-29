@@ -13,11 +13,22 @@ router.get('/', (req, res) => {
 })
 
 router.get('/:id', (req, res) => {
-  const projectID = req.params.id
-  db('projects').where({ id: projectID }).first()
+  const id = req.params.id
+  db('projects').where({id})
   .then(project => {
-    res.status(200).json(project)
-  }).catch(err => res.status(500).json(err))
+    db.raw(`select * from actions where actions.project_id = ${project[0].id}`)
+    .then(action => {
+      const list = {
+        id: project[0].id,
+        name: project[0].name,
+        description: project[0].description,
+        completed: project[0]['completed'],
+        actions: [...action]
+      }
+      res.status(200).json(list)
+    }).catch(err => res.status(500).json(err))
+  })
+
 })
 
 router.post('/', (req, res) => {
